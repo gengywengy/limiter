@@ -5,11 +5,9 @@ import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import dev.gengy.limiter.Limiter
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.modules.EmptySerializersModule
 import java.io.File
 import kotlin.io.path.createDirectory
-import kotlin.reflect.KClass
 
 object Configs {
     private val kaml = Yaml(
@@ -21,9 +19,11 @@ object Configs {
         )
     )
     lateinit var item: ItemConfig
+    lateinit var lang: LanguageConfig
 
     fun load() {
         item = loadConfig(ItemConfig.serializer(), "items.yaml", ItemConfig())
+        lang = loadConfig(LanguageConfig.serializer(), "lang.yaml", LanguageConfig())
     }
 
     private fun <T> loadConfig(serializer: KSerializer<T>, name: String, default: T): T {

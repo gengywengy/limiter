@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.gengy"
-version = "0.1.1"
+version = "0.1.2"
 
 repositories {
     mavenCentral()
@@ -20,6 +20,8 @@ repositories {
 dependencies {
     compileOnly("org.spigotmc:spigot-api:1.21.3-R0.1-SNAPSHOT")
     implementation("com.charleskorn.kaml:kaml:0.67.0")
+    implementation("net.kyori:adventure-platform-bukkit:4.3.4")
+    implementation("net.kyori:adventure-text-minimessage:4.18.0")
 }
 
 val targetJavaVersion = 21
@@ -42,5 +44,11 @@ tasks {
     }
     shadowJar {
         minimize()
+        enableRelocation = true
+        relocationPrefix = "dev.gengy"
     }
+}
+
+tasks.named("shadowJar", com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
+    minimize()
 }

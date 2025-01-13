@@ -1,8 +1,11 @@
 package dev.gengy.limiter.listener
 
+import dev.gengy.limiter.Limiter
 import dev.gengy.limiter.config.Configs
 import dev.gengy.limiter.config.Configs.item
 import dev.gengy.limiter.config.ItemConfig
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -17,6 +20,21 @@ import org.bukkit.inventory.PlayerInventory
 import kotlin.system.exitProcess
 
 class PickupListener : Listener {
+    private fun sendMaxMessage(player: Player, item: ItemConfig.ItemData) {
+        if (!Configs.lang.enableMaxMessage) return
+        Limiter.adventure.player(player).sendMessage(
+            Configs.lang.mm.deserialize(
+                Configs.lang.maxMessage,
+                Placeholder.unparsed("amount", item.maxAmount.toString()),
+                Placeholder.component("item",
+                    if (item.item.itemTranslationKey != null) {
+                        Component.translatable(item.item.itemTranslationKey!!)
+                    } else Component.text(item.item.name)
+                )
+            )
+        )
+    }
+
     @EventHandler
     fun onPickup(e: EntityPickupItemEvent) {
         if (e.entity !is Player) return
@@ -29,6 +47,7 @@ class PickupListener : Listener {
         val amount = player.inventory.contents.filter { it != null && it.type == item.type }.sumOf { it.amount }
         if (amount >= inConfig.maxAmount) {
             // Amount is already above
+            sendMaxMessage(player, inConfig)
             e.isCancelled = true
             return
         }
@@ -38,6 +57,7 @@ class PickupListener : Listener {
             return
         }
         e.isCancelled = true
+        sendMaxMessage(player, inConfig)
         val excess = (amount + item.amount) - inConfig.maxAmount
         val newAmount = item.clone()
         newAmount.amount = item.amount - excess
@@ -60,6 +80,7 @@ class PickupListener : Listener {
             val configItem = Configs.item.limitedItems.find { it.item == item.type } ?: return
             val playerInventoryAmount = e.whoClicked.inventory.contents.filterNotNull().filter { it.type == item.type }.sumOf { it.amount }
             if (playerInventoryAmount + item.amount > configItem.maxAmount) {
+                sendMaxMessage(e.whoClicked as Player, configItem)
                 e.isCancelled = true
                 val excess = (playerInventoryAmount + item.amount) - configItem.maxAmount
                 val playerInvItem = item.clone()
@@ -76,6 +97,7 @@ class PickupListener : Listener {
 
         if (e.cursor!!.amount + playerInventoryAmount > configItem.maxAmount) {
             e.isCancelled = true
+            sendMaxMessage(e.whoClicked as Player, configItem)
 
             val excess = (e.cursor!!.amount + playerInventoryAmount) - configItem.maxAmount
             e.currentItem!!.amount += (e.cursor!!.amount - excess)
