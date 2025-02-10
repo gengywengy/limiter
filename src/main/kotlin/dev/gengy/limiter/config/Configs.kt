@@ -19,10 +19,12 @@ object Configs {
         )
     )
     lateinit var item: ItemConfig
+    lateinit var enchant: EnchantConfig
     lateinit var lang: LanguageConfig
 
     fun load() {
         item = loadConfig(ItemConfig.serializer(), "items.yaml", ItemConfig())
+        enchant = loadConfig(EnchantConfig.serializer(), "enchants.yaml", EnchantConfig())
         lang = loadConfig(LanguageConfig.serializer(), "lang.yaml", LanguageConfig())
     }
 
