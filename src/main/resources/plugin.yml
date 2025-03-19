@@ -1,5 +1,5 @@
 name: limiter
-version: '0.1.3'
+version: '0.1.4'
 main: dev.gengy.limiter.Limiter
 api-version: '1.21'
 authors: [ gengywengy ]
