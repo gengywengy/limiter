@@ -44,7 +44,7 @@ class PickupListener : Listener {
             it.item == item.type
         }
         if (inConfig == null) return
-        val amount = player.inventory.contents.filter { it != null && it.type == item.type }.sumOf { it.amount }
+        val amount = getPlayerInventoryCount(player.inventory, inConfig)
         if (amount >= inConfig.maxAmount) {
             // Amount is already above
             sendMaxMessage(player, inConfig)
@@ -78,7 +78,7 @@ class PickupListener : Listener {
             if (e.clickedInventory is PlayerInventory) return
             val item = e.currentItem ?: return
             val configItem = Configs.item.limitedItems.find { it.item == item.type } ?: return
-            val playerInventoryAmount = e.whoClicked.inventory.contents.filterNotNull().filter { it.type == item.type }.sumOf { it.amount }
+            val playerInventoryAmount = getPlayerInventoryCount(e.whoClicked.inventory, configItem)
             if (playerInventoryAmount + item.amount > configItem.maxAmount) {
                 sendMaxMessage(e.whoClicked as Player, configItem)
                 e.isCancelled = true
@@ -93,7 +93,7 @@ class PickupListener : Listener {
         }
         if (e.cursor == null || e.clickedInventory !is PlayerInventory) return
         val configItem = Configs.item.limitedItems.find { it.item == e.cursor!!.type } ?: return
-        val playerInventoryAmount = e.whoClicked.inventory.contents.filterNotNull().filter { it.type == e.cursor!!.type }.sumOf { it.amount }
+        val playerInventoryAmount = getPlayerInventoryCount(e.whoClicked.inventory, configItem)
 
         if (e.cursor!!.amount + playerInventoryAmount > configItem.maxAmount) {
             e.isCancelled = true
@@ -111,12 +111,17 @@ class PickupListener : Listener {
     fun onDragClick(e: InventoryDragEvent) {
         val item = e.oldCursor
         val configItem = Configs.item.limitedItems.find { it.item == item.type } ?: return
-        val playerInventoryAmount = e.whoClicked.inventory.contents.filterNotNull().filter { it.type == configItem.item }.sumOf { it.amount }
+        val playerInventoryAmount = getPlayerInventoryCount(e.whoClicked.inventory, configItem)
         if (playerInventoryAmount + item.amount > configItem.maxAmount) {
             e.isCancelled = true
         }
 
         moveOutOfPlayerInventory(e.whoClicked.inventory, e.view.topInventory, configItem)
+    }
+
+    private fun getPlayerInventoryCount(inventory: PlayerInventory, item: ItemConfig.ItemData): Int {
+        return inventory.contents.filterNotNull().filter { it.type == item.item }.sumOf { it.amount } +
+                inventory.extraContents.filterNotNull().filter { it.type == item.item }.sumOf { it.amount }
     }
 
     private fun moveOutOfPlayerInventory(playerInventory: PlayerInventory, dest: Inventory, configItem: ItemConfig.ItemData) {
